@@ -3,8 +3,10 @@
 #include <map>
 #include <cmath>
 #include <algorithm>
+#include <SFML/Graphics.hpp>
 
 using namespace std;
+using namespace sf;
 
 // Структура для представления графа
 struct Graph {
@@ -84,20 +86,60 @@ int main() {
         // Раскрашиваем вершины графа
         int k = 0;
         vector<pair<double, double>> RawColors = Colorings[k];
-        map<pair<double, double>, string> RootsToColors = {
-            { {1, 0}, "red" },
-            { {-0.5, sqrt(3) / 2}, "green" },
-            { {-0.5, -sqrt(3) / 2}, "blue" }
+        map<pair<double, double>, Color> RootsToColors = {
+            { {1, 0}, Color::Red },
+            { {-0.5, sqrt(3) / 2}, Color::Green },
+            { {-0.5, -sqrt(3) / 2}, Color::Blue }
         };
 
-        vector<string> ColorDictionary(NumberOfVertices);
+        vector<Color> ColorDictionary(NumberOfVertices);
         for (int i = 0; i < NumberOfVertices; ++i) {
             ColorDictionary[i] = RootsToColors[RawColors[i]];
         }
 
-        // Выводим раскраску
+        // Создаем окно
+        RenderWindow window(VideoMode(800, 600), "Graph Coloring");
+
+        // Определяем координаты вершин
+        vector<Vector2f> vertexPositions;
+        float radius = 200.0f;
+        float angle = 2.0f * 3.14159f / NumberOfVertices;
         for (int i = 0; i < NumberOfVertices; ++i) {
-            cout << "Vertex " << i << " is colored " << ColorDictionary[i] << endl;
+            float x = 400.0f + radius * cos(i * angle);
+            float y = 300.0f + radius * sin(i * angle);
+            vertexPositions.push_back(Vector2f(x, y));
+        }
+
+        // Основной цикл
+        while (window.isOpen()) {
+            Event event;
+            while (window.pollEvent(event)) {
+                if (event.type == Event::Closed) {
+                    window.close();
+                }
+            }
+
+            window.clear();
+
+            // Рисуем вершины
+            for (int i = 0; i < NumberOfVertices; ++i) {
+                CircleShape vertex(10.0f);
+                vertex.setFillColor(ColorDictionary[i]);
+                vertex.setPosition(vertexPositions[i] - Vector2f(10.0f, 10.0f));
+                window.draw(vertex);
+            }
+
+            // Рисуем ребра
+            for (const auto& edge : EdgesList) {
+                VertexArray line(Lines, 2);
+                line[0].position = vertexPositions[edge.first];
+                line[1].position = vertexPositions[edge.second];
+                line[0].color = Color::Black;
+                line[1].color = Color::Black;
+                window.draw(line);
+            }
+
+            window.display();
         }
     }
     else {
